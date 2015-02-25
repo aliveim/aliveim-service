@@ -9,3 +9,7 @@ This service aims to solve a problem people may have with many connected devices
 # About alive-im micro service
 
 The micro service listens to an internal interface for a POST message sent by the main service. The main service will communicate the device ID (that will be used to identify the device in the timers pool) and the maximum timeout. Once received these informations, the micro service spawns a Timer based object with the device informations. If the device send another "ping" within the maximum timeout, the Timer is reset. If the timeout expires before receiving a new "ping" message, the notification is triggered.
+
+## Why Go?
+
+Technically I could have implemented everything in Python (using Celery and RabbitMQ for async tasks). I chose Go mainly because I wanted a concrete (but not too complex) project to improve my Go language skills. The other (but not less important) reason is because if the service is going to have thousand of devices "connected" and spawn a Timer based object for each device, it's nice to have a more optimized application that will consume less memory.
