@@ -24,6 +24,16 @@ var timers_map = make(map[string]DeviceTimer)
 func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	aliverequest := parseAlivePost(request.Body)
 	log.Printf("DeviceID: %s, Timeout: %d\n", aliverequest.DeviceID, aliverequest.Timeout)
+
+	timer := timers_map[aliverequest.DeviceID]
+
+	if timer == nil {
+		timer := time.NewTimer(aliverequest.Timeout)
+		device_timer := DeviceTimer{aliverequest.DeviceID, timer, aliverequest.Timeout}
+		timers_map[aliverequest.DeviceID] = device_timer
+	} else {
+		timer.DeviceTimer.Reset(aliverequest.Timeout)
+	}
 }
 
 func parseAlivePost(body io.ReadCloser) AliveRequest {
