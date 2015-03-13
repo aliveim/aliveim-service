@@ -6,11 +6,18 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 type AliveRequest struct {
 	DeviceID string `json:"device_id"`
 	Timeout  int32  `json:"timeout"`
+}
+
+type DeviceTimer struct {
+	DeviceID      string
+	DeviceTimer   time.Timer
+	DeviceTimeout int32
 }
 
 func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
