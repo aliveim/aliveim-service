@@ -18,7 +18,8 @@ func TestParseAlivePost(t *testing.T) {
 	var ar AliveRequest = parseAlivePost(body)
 
 	if ar.DeviceID != "abc123" || ar.Timeout != 300 {
-		t.Fatalf("Expected: DeviceID: %s, Timeout: %d, got DeviceID: %s, Timeout: %d", "abc123", 300, ar.DeviceID, ar.Timeout)
+		t.Fatalf("Expected: DeviceID: %s, Timeout: %d, got DeviceID: %s, Timeout: %d",
+			"abc123", 300, ar.DeviceID, ar.Timeout)
 	}
 }
 
@@ -30,6 +31,7 @@ func TestCreateTimerInsertMapRetrive(t *testing.T) {
 	my_timer := timers_map["abc123"]
 
 	if my_timer.DeviceTimeout != 2000 || my_timer.DeviceID != "abc123" {
-		t.Fatalf("Expected: DeviceID: %s, Timeout: %d, got DeviceID: %s, Timeout: %d", "abc123", 2000, my_timer.DeviceID, my_timer.DeviceTimeout)
+		t.Fatalf("Expected: DeviceID: %s, Timeout: %d, got DeviceID: %s, Timeout: %d",
+			"abc123", 2000, my_timer.DeviceID, my_timer.DeviceTimeout)
 	}
 }
