@@ -25,14 +25,14 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	aliverequest := parseAlivePost(request.Body)
 	log.Printf("DeviceID: %s, Timeout: %d\n", aliverequest.DeviceID, aliverequest.Timeout)
 
-	timer := timers_map[aliverequest.DeviceID]
+	timer, timer_found := timers_map[aliverequest.DeviceID]
 
-	if timer == nil {
-		timer := time.NewTimer(aliverequest.Timeout)
+	if timer_found {
+		timer.DeviceTimer.Reset(time.Duration(aliverequest.Timeout))
+	} else {
+		timer := time.NewTimer(time.Duration(aliverequest.Timeout))
 		device_timer := DeviceTimer{aliverequest.DeviceID, timer, aliverequest.Timeout}
 		timers_map[aliverequest.DeviceID] = device_timer
-	} else {
-		timer.DeviceTimer.Reset(aliverequest.Timeout)
 	}
 }
 
