@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -24,7 +23,7 @@ var timers_map = make(map[string]DeviceTimer)
 
 func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	aliverequest := parseAlivePost(request.Body)
-	fmt.Printf("DeviceID: %s, Timeout: %d", aliverequest.DeviceID, aliverequest.Timeout)
+	log.Printf("DeviceID: %s, Timeout: %d\n", aliverequest.DeviceID, aliverequest.Timeout)
 }
 
 func parseAlivePost(body io.ReadCloser) AliveRequest {
@@ -41,7 +40,7 @@ func parseAlivePost(body io.ReadCloser) AliveRequest {
 }
 
 func main() {
-	fmt.Println("Starting AliveIM service...")
+	log.Println("Starting AliveIM service...")
 	http.HandleFunc("/", handleAlivePost)
 	http.ListenAndServe("localhost:5000", nil)
 }
