@@ -16,9 +16,11 @@ type AliveRequest struct {
 
 type DeviceTimer struct {
 	DeviceID      string
-	DeviceTimer   time.Timer
+	DeviceTimer   *time.Timer
 	DeviceTimeout int32
 }
+
+var timers_map = make(map[string]DeviceTimer)
 
 func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	aliverequest := parseAlivePost(request.Body)
