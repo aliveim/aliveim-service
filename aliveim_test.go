@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"io"
+	"strings"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ type nopCloser struct {
 func (nopCloser) Close() error { return nil }
 
 func TestParseAlivePost(t *testing.T) {
-	var body io.ReadCloser = nopCloser{bytes.NewBufferString(`{"device_id": "abc123", "timeout": 300}`)}
+	var body io.ReadCloser = nopCloser{strings.NewReader(`{"device_id": "abc123", "timeout": 300}`)}
 	var ar AliveRequest = parseAlivePost(body)
 
 	if ar.DeviceID != "abc123" || ar.Timeout != 300 {
