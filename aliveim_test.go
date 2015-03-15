@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -34,4 +35,16 @@ func TestCreateTimerInsertMapRetrive(t *testing.T) {
 		t.Fatalf("Expected: DeviceID: %s, Timeout: %d, got DeviceID: %s, Timeout: %d",
 			"abc123", 2000, my_timer.DeviceID, my_timer.DeviceTimeout)
 	}
+}
+
+func TestDeviceTimerStartTimerTimeout(t *testing.T) {
+	timer := time.NewTimer(time.Second * 3)
+	device_timer := DeviceTimer{"abc123", timer, 3000}
+	fmt.Println("Start timer...")
+	device_timer.startTimerAndWait()
+	fmt.Println("Sleep 1000 ms...")
+	time.Sleep(time.Second * 1)
+	fmt.Println("Sleep 3000 ms...")
+	time.Sleep(time.Second * 3)
+	fmt.Println("Printed after device expiration")
 }

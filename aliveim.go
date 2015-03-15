@@ -20,13 +20,16 @@ type DeviceTimer struct {
 }
 
 func (timer DeviceTimer) startTimerAndWait() {
+	log.Println("Starting DeviceTimer...")
 	<-timer.DeviceTimer.C
+	log.Println("DeviceTimer STOPPED!")
 	notifyDeviceTimerExpired(timer.DeviceID)
 }
 
 var timers_map = make(map[string]DeviceTimer)
 
 func notifyDeviceTimerExpired(device_id string) {
+	log.Printf("DeviceID: %s expired!\n", device_id)
 	return
 }
 
