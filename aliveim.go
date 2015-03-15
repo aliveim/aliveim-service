@@ -18,7 +18,7 @@ type DeviceTimer struct {
 	DeviceTimer *time.Timer
 }
 
-func (timer DeviceTimer) startTimerAndWait() {
+func (timer DeviceTimer) startTimer() {
 	<-timer.DeviceTimer.C
 	notifyDeviceTimerExpired(timer.DeviceID)
 }
@@ -42,7 +42,7 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 		timer := time.NewTimer(time.Millisecond * time.Duration(aliverequest.Timeout))
 		device_timer := DeviceTimer{aliverequest.DeviceID, timer}
 		timers_map[aliverequest.DeviceID] = device_timer
-		go device_timer.startTimerAndWait()
+		go device_timer.startTimer()
 	}
 }
 
