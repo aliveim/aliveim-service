@@ -37,13 +37,13 @@ func TestCreateTimerInsertMapRetrive(t *testing.T) {
 }
 
 func TestDeviceTimerStartTimerTimeout(t *testing.T) {
-	timer := time.NewTimer(time.Second * 3)
+	timer := time.NewTimer(time.Millisecond * 300)
 	device_timer := DeviceTimer{"abc123", timer}
 	fmt.Println("Start timer...")
-	go device_timer.startTimerAndWait()
-	fmt.Println("Sleep 1000 ms...")
-	time.Sleep(time.Second * 1)
-	fmt.Println("Sleep 3000 ms...")
-	time.Sleep(time.Second * 3)
+	go device_timer.startTimer()
+	fmt.Println("Sleep 100 ms...")
+	time.Sleep(time.Millisecond * 100)
+	fmt.Println("Sleep 300 ms...")
+	time.Sleep(time.Millisecond * 300)
 	fmt.Println("Printed after device expiration")
 }
