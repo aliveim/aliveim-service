@@ -19,7 +19,16 @@ type DeviceTimer struct {
 	DeviceTimeout int32
 }
 
+func (timer DeviceTimer) startTimerAndWait() {
+	<-timer.DeviceTimer.C
+	notifyDeviceTimerExpired(timer.DeviceID)
+}
+
 var timers_map = make(map[string]DeviceTimer)
+
+func notifyDeviceTimerExpired(device_id string) {
+	return
+}
 
 func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	aliverequest := parseAlivePost(request.Body)
@@ -33,6 +42,7 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 		timer := time.NewTimer(time.Duration(aliverequest.Timeout))
 		device_timer := DeviceTimer{aliverequest.DeviceID, timer, aliverequest.Timeout}
 		timers_map[aliverequest.DeviceID] = device_timer
+		device_timer.startTimerAndWait()
 	}
 }
 
