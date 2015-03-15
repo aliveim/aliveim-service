@@ -14,15 +14,12 @@ type AliveRequest struct {
 }
 
 type DeviceTimer struct {
-	DeviceID      string
-	DeviceTimer   *time.Timer
-	DeviceTimeout int32
+	DeviceID    string
+	DeviceTimer *time.Timer
 }
 
 func (timer DeviceTimer) startTimerAndWait() {
-	log.Println("Starting DeviceTimer...")
 	<-timer.DeviceTimer.C
-	log.Println("DeviceTimer STOPPED!")
 	notifyDeviceTimerExpired(timer.DeviceID)
 }
 
@@ -40,12 +37,12 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	timer, timer_found := timers_map[aliverequest.DeviceID]
 
 	if timer_found {
-		timer.DeviceTimer.Reset(time.Duration(aliverequest.Timeout))
+		timer.DeviceTimer.Reset(time.Millisecond * time.Duration(aliverequest.Timeout))
 	} else {
-		timer := time.NewTimer(time.Duration(aliverequest.Timeout))
-		device_timer := DeviceTimer{aliverequest.DeviceID, timer, aliverequest.Timeout}
+		timer := time.NewTimer(time.Millisecond * time.Duration(aliverequest.Timeout))
+		device_timer := DeviceTimer{aliverequest.DeviceID, timer}
 		timers_map[aliverequest.DeviceID] = device_timer
-		device_timer.startTimerAndWait()
+		go device_timer.startTimerAndWait()
 	}
 }
 
