@@ -27,6 +27,7 @@ var timers_map = make(map[string]DeviceTimer)
 
 func notifyDeviceTimerExpired(device_id string) {
 	log.Printf("DeviceID: %s expired!\n", device_id)
+	delete(timers_map, device_id)
 	return
 }
 
