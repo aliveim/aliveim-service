@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -26,12 +27,23 @@ func TestParseAlivePost(t *testing.T) {
 func TestCreateTimerInsertMapRetrive(t *testing.T) {
 	var timers_map = make(map[string]DeviceTimer)
 	timer := time.NewTimer(time.Second * 2)
-	device_timer := DeviceTimer{"abc123", timer, 2000}
+	device_timer := DeviceTimer{"abc123", timer}
 	timers_map["abc123"] = device_timer
 	my_timer := timers_map["abc123"]
 
-	if my_timer.DeviceTimeout != 2000 || my_timer.DeviceID != "abc123" {
-		t.Fatalf("Expected: DeviceID: %s, Timeout: %d, got DeviceID: %s, Timeout: %d",
-			"abc123", 2000, my_timer.DeviceID, my_timer.DeviceTimeout)
+	if my_timer.DeviceID != "abc123" {
+		t.Fatalf("Expected: DeviceID: %s, got DeviceID: %s", "abc123", my_timer.DeviceID)
 	}
+}
+
+func TestDeviceTimerStartTimerTimeout(t *testing.T) {
+	timer := time.NewTimer(time.Millisecond * 300)
+	device_timer := DeviceTimer{"abc123", timer}
+	fmt.Println("Start timer...")
+	go device_timer.startTimer()
+	fmt.Println("Sleep 100 ms...")
+	time.Sleep(time.Millisecond * 100)
+	fmt.Println("Sleep 300 ms...")
+	time.Sleep(time.Millisecond * 300)
+	fmt.Println("Printed after device expiration")
 }

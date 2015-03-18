@@ -24,6 +24,6 @@ Technically I could have implemented everything in Python (using Celery and Rabb
 }
 ```
 * aliveim-service searches inside an **hash table** where the key is **device_id** and the value is a pointer to a Timer based object.
-  * If the key is **not found**, a new Timer based object is crteated with a timeout given by the initial call. An item is added to the hash table with device_id as key and just created Timer based object pointer as value.
+  * If the key is **not found**, a new Timer based object is created with a timeout given by the initial call. An item is added to the hash table with device_id as key and just created Timer based object pointer as value.
   * If the key is **found**, the related Timer based object is get from the hash table and its timeout is reset.
-* If one of the Timer based objects reaches the timeout, aliveim-service triggers a notification on the backend, sendind the device_id that is involved in the timeout.
+* If one of the Timer based objects reaches the timeout, aliveim-service triggers a notification on the backend, sending the device_id that is involved in the timeout.
