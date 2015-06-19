@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -13,6 +15,17 @@ type nopCloser struct {
 }
 
 func (nopCloser) Close() error { return nil }
+
+var (
+	server        *httptest.Server
+	reader        io.Reader
+	devicePostUrl string
+)
+
+func init() {
+	server = httptest.NewServer(http.HandlerFunc(handleAlivePost))
+	devicePostUrl = fmt.Sprintf("%s/", server.URL)
+}
 
 func TestParseAlivePost(t *testing.T) {
 	var body io.ReadCloser = nopCloser{strings.NewReader(`{"device_id": "abc123", "timeout": 300}`)}
@@ -46,4 +59,20 @@ func TestDeviceTimerStartTimerTimeout(t *testing.T) {
 	fmt.Println("Sleep 300 ms...")
 	time.Sleep(time.Millisecond * 300)
 	fmt.Println("Printed after device expiration")
+}
+
+func TestPostDevicePayload(t *testing.T) {
+	deviceJson := `{"device_id": "abc123", "timeout": 300}`
+	reader = strings.NewReader(deviceJson)                         //Convert string to reader
+	request, err := http.NewRequest("POST", devicePostUrl, reader) //Create request with JSON body
+
+	res, err := http.DefaultClient.Do(request)
+
+	if err != nil {
+		t.Error(err) //Something is wrong while sending request
+	}
+
+	if res.StatusCode != 201 {
+		t.Errorf("Success expected: %d", res.StatusCode) //Uh-oh this means our test failed
+	}
 }
