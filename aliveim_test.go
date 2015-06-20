@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type nopCloser struct {
@@ -61,7 +63,7 @@ func TestDeviceTimerStartTimerTimeout(t *testing.T) {
 	fmt.Println("Printed after device expiration")
 }
 
-func TestPostDevicePayload(t *testing.T) {
+func TestPostDevicePayloadEmptyTimersMap(t *testing.T) {
 	deviceJson := `{"device_id": "abc123", "timeout": 300}`
 	reader = strings.NewReader(deviceJson)                         //Convert string to reader
 	request, err := http.NewRequest("POST", devicePostUrl, reader) //Create request with JSON body
@@ -73,6 +75,30 @@ func TestPostDevicePayload(t *testing.T) {
 	}
 
 	if res.StatusCode != 201 {
+		t.Errorf("Success expected: %d", res.StatusCode) //Uh-oh this means our test failed
+	}
+
+	timer, timer_found := timers_map["abc123"]
+	assert.True(t, timer_found)
+	assert.NotNil(t, timer)
+}
+
+func TestPostDevicePayloadExistingTimersMap(t *testing.T) {
+	timer := time.NewTimer(time.Millisecond * time.Duration(300))
+	device_timer := DeviceTimer{"abc123", timer}
+	timers_map["abc123"] = device_timer
+
+	deviceJson := `{"device_id": "abc123", "timeout": 300}`
+	reader = strings.NewReader(deviceJson)                         //Convert string to reader
+	request, err := http.NewRequest("POST", devicePostUrl, reader) //Create request with JSON body
+
+	res, err := http.DefaultClient.Do(request)
+
+	if err != nil {
+		t.Error(err) //Something is wrong while sending request
+	}
+
+	if res.StatusCode != 200 {
 		t.Errorf("Success expected: %d", res.StatusCode) //Uh-oh this means our test failed
 	}
 }
