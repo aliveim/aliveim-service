@@ -39,11 +39,13 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 
 	if timer_found {
 		timer.DeviceTimer.Reset(time.Millisecond * time.Duration(aliverequest.Timeout))
+		rw.WriteHeader(http.StatusOK)
 	} else {
 		timer := time.NewTimer(time.Millisecond * time.Duration(aliverequest.Timeout))
 		device_timer := DeviceTimer{aliverequest.DeviceID, timer}
 		timers_map[aliverequest.DeviceID] = device_timer
 		go device_timer.startTimer()
+		rw.WriteHeader(http.StatusCreated)
 	}
 }
 
