@@ -27,3 +27,8 @@ Technically I could have implemented everything in Python (using Celery and Rabb
   * If the key is **not found**, a new Timer based object is created with a timeout given by the initial call. An item is added to the hash table with device_id as key and just created Timer based object pointer as value.
   * If the key is **found**, the related Timer based object is get from the hash table and its timeout is reset.
 * If one of the Timer based objects reaches the timeout, aliveim-service triggers a notification on the backend, sending the device_id that is involved in the timeout.
+
+# Continuous integration status
+
+[![Travis-CI Status](https://secure.travis-ci.org/aliveim/aliveim-service.png?branch=master)](http://travis-ci.org/#!/aliveim/aliveim-service)
+
