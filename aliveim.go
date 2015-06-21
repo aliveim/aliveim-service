@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type AliveRequest struct {
@@ -62,8 +64,13 @@ func parseAlivePost(body io.ReadCloser) AliveRequest {
 	return aliverequest
 }
 
+func Handlers() *mux.Router {
+	r := mux.NewRouter()
+	r.HandleFunc("/", handleAlivePost).Methods("POST")
+	return r
+}
+
 func main() {
 	log.Println("Starting AliveIM service...")
-	http.HandleFunc("/", handleAlivePost)
-	http.ListenAndServe("localhost:5000", nil)
+	http.ListenAndServe("localhost:5000", Handlers())
 }
