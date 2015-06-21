@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	server = httptest.NewServer(http.HandlerFunc(handleAlivePost))
+	server = httptest.NewServer(Handlers())
 	devicePostUrl = fmt.Sprintf("%s/", server.URL)
 }
 
