@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -26,6 +28,9 @@ func (timer DeviceTimer) startTimer() {
 }
 
 var timers_map = make(map[string]DeviceTimer)
+
+const defaultAddr string = "localhost"
+const defaultPort string = "5000"
 
 func notifyDeviceTimerExpired(device_id string) {
 	log.Printf("DeviceID: %s expired!\n", device_id)
@@ -71,6 +76,23 @@ func Handlers() *mux.Router {
 }
 
 func main() {
-	log.Println("Starting AliveIM service...")
-	http.ListenAndServe("localhost:5000", Handlers())
+	port := defaultPort
+	addr := defaultAddr
+
+	if nargs := len(os.Args[1:]); nargs > 0 {
+		switch nargs {
+		case 2:
+			port = os.Args[2]
+			fallthrough
+		case 1:
+			addr = os.Args[1]
+		default:
+			log.Fatal("Too many parameters.")
+		}
+	}
+
+	log.Printf("Starting AliveIM service on %s and port %s...\n", addr, port)
+	if err := http.ListenAndServe(fmt.Sprintf("%s:%s", addr, port), Handlers()); err != nil {
+		log.Fatalf("%v", err)
+	}
 }
