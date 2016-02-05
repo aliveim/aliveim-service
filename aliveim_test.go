@@ -31,7 +31,7 @@ func init() {
 
 func TestParseAlivePost(t *testing.T) {
 	var body io.ReadCloser = nopCloser{strings.NewReader(`{"device_id": "abc123", "timeout": 300}`)}
-	var ar AliveRequest = parseAlivePost(body)
+	ar, _ := parseAlivePost(body)
 
 	if ar.DeviceID != "abc123" || ar.Timeout != 300 {
 		t.Fatalf("Expected: DeviceID: %s, Timeout: %d, got DeviceID: %s, Timeout: %d",
@@ -98,6 +98,19 @@ func TestPostDevicePayloadExistingTimersMap(t *testing.T) {
 		t.Error(err) //Something is wrong while sending request
 	}
 
+	if res.StatusCode != 200 {
+		t.Errorf("Success expected: %d", res.StatusCode) //Uh-oh this means our test failed
+	}
+}
+
+func TestMalformedJSONPayLoad(t *testing.T) {
+	reader := strings.NewReader("") // empty request
+	request, err := http.NewRequest("POST", devicePostUrl, reader)
+	res, err := http.DefaultClient.Do(request)
+
+	if err != nil {
+		t.Error(err) //Something is wrong while sending request
+	}
 	if res.StatusCode != 200 {
 		t.Errorf("Success expected: %d", res.StatusCode) //Uh-oh this means our test failed
 	}
