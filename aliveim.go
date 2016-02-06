@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -27,14 +28,48 @@ func (timer DeviceTimer) startTimer() {
 	notifyDeviceTimerExpired(timer.DeviceID)
 }
 
-var timers_map = make(map[string]DeviceTimer)
+type TimersMap struct {
+	Timers map[string]DeviceTimer
+	sync.RWMutex
+}
+
+func NewTimersMap() *TimersMap {
+	return &TimersMap{Timers: make(map[string]DeviceTimer)}
+}
+
+func (m *TimersMap) ResetOrSetNew(deviceID string, timeout int32) (DeviceTimer, bool) {
+	newTimeout := time.Millisecond * time.Duration(timeout)
+
+	m.Lock()
+	deviceTimer, ok := m.Timers[deviceID]
+	if ok {
+		deviceTimer.DeviceTimer.Reset(newTimeout)
+	} else {
+		timer := time.NewTimer(newTimeout)
+		deviceTimer = DeviceTimer{deviceID, timer}
+		m.Timers[deviceID] = deviceTimer
+		go deviceTimer.startTimer()
+	}
+	m.Unlock()
+
+	return deviceTimer, !ok
+}
+
+func (m *TimersMap) Delete(deviceID string) {
+	m.Lock()
+	delete(m.Timers, deviceID)
+	m.Unlock()
+	return
+}
 
 const defaultAddr string = "localhost"
 const defaultPort string = "5000"
 
-func notifyDeviceTimerExpired(device_id string) {
-	log.Printf("DeviceID: %s expired!\n", device_id)
-	delete(timers_map, device_id)
+var timers *TimersMap = NewTimersMap()
+
+func notifyDeviceTimerExpired(deviceID string) {
+	log.Printf("DeviceID: %s expired!\n", deviceID)
+	timers.Delete(deviceID)
 	return
 }
 
@@ -46,16 +81,9 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	}
 	log.Printf("DeviceID: %s, Timeout: %d\n", aliverequest.DeviceID, aliverequest.Timeout)
 
-	timer, timer_found := timers_map[aliverequest.DeviceID]
-
-	if timer_found {
-		timer.DeviceTimer.Reset(time.Millisecond * time.Duration(aliverequest.Timeout))
+	if _, created := timers.ResetOrSetNew(aliverequest.DeviceID, aliverequest.Timeout); created {
 		rw.WriteHeader(http.StatusOK)
 	} else {
-		timer := time.NewTimer(time.Millisecond * time.Duration(aliverequest.Timeout))
-		device_timer := DeviceTimer{aliverequest.DeviceID, timer}
-		timers_map[aliverequest.DeviceID] = device_timer
-		go device_timer.startTimer()
 		rw.WriteHeader(http.StatusCreated)
 	}
 }
