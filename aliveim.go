@@ -39,7 +39,11 @@ func notifyDeviceTimerExpired(device_id string) {
 }
 
 func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
-	aliverequest := parseAlivePost(request.Body)
+	aliverequest, err := parseAlivePost(request.Body)
+	if err != nil {
+		log.Printf("ERROR: Couldn't parse request -- %v", err)
+		return
+	}
 	log.Printf("DeviceID: %s, Timeout: %d\n", aliverequest.DeviceID, aliverequest.Timeout)
 
 	timer, timer_found := timers_map[aliverequest.DeviceID]
@@ -56,17 +60,13 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func parseAlivePost(body io.ReadCloser) AliveRequest {
+func parseAlivePost(body io.ReadCloser) (AliveRequest, error) {
 	aliverequest_decoder := json.NewDecoder(body)
 
 	var aliverequest AliveRequest
-	err_aliverequest := aliverequest_decoder.Decode(&aliverequest)
+	err := aliverequest_decoder.Decode(&aliverequest)
 
-	if err_aliverequest != nil {
-		log.Fatalf("Error decoding aliverequest: %s", err_aliverequest)
-	}
-
-	return aliverequest
+	return aliverequest, err
 }
 
 func Handlers() *mux.Router {
