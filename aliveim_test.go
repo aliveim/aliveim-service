@@ -111,7 +111,7 @@ func TestMalformedJSONPayLoad(t *testing.T) {
 	if err != nil {
 		t.Error(err) //Something is wrong while sending request
 	}
-	if res.StatusCode != 200 {
-		t.Errorf("Success expected: %d", res.StatusCode) //Uh-oh this means our test failed
+	if res.StatusCode != 400 {
+		t.Errorf("Failure expected: %d", res.StatusCode) //Uh-oh this means our test failed
 	}
 }

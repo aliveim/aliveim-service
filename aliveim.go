@@ -42,6 +42,7 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	aliverequest, err := parseAlivePost(request.Body)
 	if err != nil {
 		log.Printf("ERROR: Couldn't parse request -- %v", err)
+		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	log.Printf("DeviceID: %s, Timeout: %d\n", aliverequest.DeviceID, aliverequest.Timeout)
