@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -22,19 +22,20 @@ type DeviceTimer struct {
 	DeviceTimer *time.Timer
 }
 
+var (
+	servicePort = flag.Int("port", 5000, "Set the service port")
+	serviceHost = flag.String("host", "localhost", "Set the service host")
+	timersMap   = make(map[string]DeviceTimer)
+)
+
 func (timer DeviceTimer) startTimer() {
 	<-timer.DeviceTimer.C
 	notifyDeviceTimerExpired(timer.DeviceID)
 }
 
-var timers_map = make(map[string]DeviceTimer)
-
-const defaultAddr string = "localhost"
-const defaultPort string = "5000"
-
 func notifyDeviceTimerExpired(device_id string) {
 	log.Printf("DeviceID: %s expired!\n", device_id)
-	delete(timers_map, device_id)
+	delete(timersMap, device_id)
 	return
 }
 
@@ -47,25 +48,25 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	}
 	log.Printf("DeviceID: %s, Timeout: %d\n", aliverequest.DeviceID, aliverequest.Timeout)
 
-	timer, timer_found := timers_map[aliverequest.DeviceID]
+	timer, timerFound := timersMap[aliverequest.DeviceID]
 
-	if timer_found {
+	if timerFound {
 		timer.DeviceTimer.Reset(time.Millisecond * time.Duration(aliverequest.Timeout))
 		rw.WriteHeader(http.StatusOK)
 	} else {
 		timer := time.NewTimer(time.Millisecond * time.Duration(aliverequest.Timeout))
-		device_timer := DeviceTimer{aliverequest.DeviceID, timer}
-		timers_map[aliverequest.DeviceID] = device_timer
-		go device_timer.startTimer()
+		deviceTimer := DeviceTimer{aliverequest.DeviceID, timer}
+		timersMap[aliverequest.DeviceID] = deviceTimer
+		go deviceTimer.startTimer()
 		rw.WriteHeader(http.StatusCreated)
 	}
 }
 
 func parseAlivePost(body io.ReadCloser) (AliveRequest, error) {
-	aliverequest_decoder := json.NewDecoder(body)
+	aliverequestDecoder := json.NewDecoder(body)
 
 	var aliverequest AliveRequest
-	err := aliverequest_decoder.Decode(&aliverequest)
+	err := aliverequestDecoder.Decode(&aliverequest)
 
 	return aliverequest, err
 }
@@ -77,23 +78,16 @@ func Handlers() *mux.Router {
 }
 
 func main() {
-	port := defaultPort
-	addr := defaultAddr
+	flag.Parse()
 
-	if nargs := len(os.Args[1:]); nargs > 0 {
-		switch nargs {
-		case 2:
-			port = os.Args[2]
-			fallthrough
-		case 1:
-			addr = os.Args[1]
-		default:
-			log.Fatal("Too many parameters.")
-		}
-	}
+	log.Printf(
+		"Starting AliveIM service on %s and port %d ...\n",
+		*serviceHost, *servicePort)
 
-	log.Printf("Starting AliveIM service on %s and port %s...\n", addr, port)
-	if err := http.ListenAndServe(fmt.Sprintf("%s:%s", addr, port), Handlers()); err != nil {
+	if err := http.ListenAndServe(
+		fmt.Sprintf(
+			"%s:%d", *serviceHost, *servicePort),
+		Handlers()); err != nil {
 		log.Fatalf("%v", err)
 	}
 }

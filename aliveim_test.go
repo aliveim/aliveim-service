@@ -78,7 +78,7 @@ func TestPostDevicePayloadEmptyTimersMap(t *testing.T) {
 		t.Errorf("Success expected: %d", res.StatusCode) //Uh-oh this means our test failed
 	}
 
-	timer, timer_found := timers_map["abc123"]
+	timer, timer_found := timersMap["abc123"]
 	assert.True(t, timer_found)
 	assert.NotNil(t, timer)
 }
@@ -86,7 +86,7 @@ func TestPostDevicePayloadEmptyTimersMap(t *testing.T) {
 func TestPostDevicePayloadExistingTimersMap(t *testing.T) {
 	timer := time.NewTimer(time.Millisecond * time.Duration(300))
 	device_timer := DeviceTimer{"abc123", timer}
-	timers_map["abc123"] = device_timer
+	timersMap["abc123"] = device_timer
 
 	deviceJson := `{"device_id": "abc123", "timeout": 300}`
 	reader = strings.NewReader(deviceJson)                         //Convert string to reader
