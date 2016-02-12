@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -26,6 +27,7 @@ var (
 	servicePort = flag.Int("port", 5000, "Set the service port")
 	serviceHost = flag.String("host", "localhost", "Set the service host")
 	timersMap   = make(map[string]DeviceTimer)
+	mutex       = &sync.Mutex{}
 )
 
 func (timer DeviceTimer) startTimer() {
@@ -35,7 +37,9 @@ func (timer DeviceTimer) startTimer() {
 
 func notifyDeviceTimerExpired(device_id string) {
 	log.Printf("DeviceID: %s expired!\n", device_id)
+	mutex.Lock()
 	delete(timersMap, device_id)
+	mutex.Unlock()
 	return
 }
 
@@ -48,7 +52,9 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	}
 	log.Printf("DeviceID: %s, Timeout: %d\n", aliverequest.DeviceID, aliverequest.Timeout)
 
+	mutex.Lock()
 	timer, timerFound := timersMap[aliverequest.DeviceID]
+	mutex.Unlock()
 
 	if timerFound {
 		timer.DeviceTimer.Reset(time.Millisecond * time.Duration(aliverequest.Timeout))
@@ -56,8 +62,12 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	} else {
 		timer := time.NewTimer(time.Millisecond * time.Duration(aliverequest.Timeout))
 		deviceTimer := DeviceTimer{aliverequest.DeviceID, timer}
+
+		mutex.Lock()
 		timersMap[aliverequest.DeviceID] = deviceTimer
 		go deviceTimer.startTimer()
+		mutex.Unlock()
+
 		rw.WriteHeader(http.StatusCreated)
 	}
 }
