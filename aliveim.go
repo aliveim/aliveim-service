@@ -53,8 +53,8 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 	log.Printf("DeviceID: %s, Timeout: %d\n", aliverequest.DeviceID, aliverequest.Timeout)
 
 	mutex.Lock()
+	defer mutex.Unlock()
 	timer, timerFound := timersMap[aliverequest.DeviceID]
-	mutex.Unlock()
 
 	if timerFound {
 		timer.DeviceTimer.Reset(time.Millisecond * time.Duration(aliverequest.Timeout))
@@ -63,9 +63,7 @@ func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
 		timer := time.NewTimer(time.Millisecond * time.Duration(aliverequest.Timeout))
 		deviceTimer := DeviceTimer{aliverequest.DeviceID, timer}
 
-		mutex.Lock()
 		timersMap[aliverequest.DeviceID] = deviceTimer
-		mutex.Unlock()
 
 		go deviceTimer.startTimer()
 		rw.WriteHeader(http.StatusCreated)
