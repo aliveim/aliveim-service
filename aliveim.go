@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -13,6 +14,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type Client struct {
+	HTTPClient *http.Client
+}
+
 type AliveRequest struct {
 	DeviceID string `json:"device_id"`
 	Timeout  int32  `json:"timeout"`
@@ -24,10 +29,13 @@ type DeviceTimer struct {
 }
 
 var (
-	servicePort = flag.Int("port", 5000, "Set the service port")
-	serviceHost = flag.String("host", "localhost", "Set the service host")
+	servicePort = flag.Int("service-port", 5000, "Set the service port")
+	serviceHost = flag.String("service-host", "localhost", "Set the service host")
+	apiURL      = flag.String("api-url", "http://localhost", "Set the API url")
+	apiTOKEN    = flag.String("api-token", "aabbccdd", "Set the API token")
 	timersMap   = make(map[string]DeviceTimer)
 	mutex       = &sync.Mutex{}
+	client      = &Client{}
 )
 
 func (timer DeviceTimer) startTimer() {
@@ -35,12 +43,38 @@ func (timer DeviceTimer) startTimer() {
 	notifyDeviceTimerExpired(timer.DeviceID)
 }
 
-func notifyDeviceTimerExpired(device_id string) {
-	log.Printf("DeviceID: %s expired!\n", device_id)
+func notifyDeviceTimerExpired(deviceID string) {
+	log.Printf("DeviceID: %s expired!\n", deviceID)
 	mutex.Lock()
-	delete(timersMap, device_id)
+	delete(timersMap, deviceID)
 	mutex.Unlock()
-	return
+
+	err := client.notifyAPIDeviceTimerExpired(deviceID)
+
+	if err != nil {
+		log.Printf("Error while posting notification to the API server: %s\n", err)
+	}
+}
+
+func (m *Client) notifyAPIDeviceTimerExpired(deviceID string) (err error) {
+	var jsonStr = []byte(fmt.Sprintf(`{"device_id": %s}`, deviceID))
+	req, err := http.NewRequest("POST", *apiURL, bytes.NewBuffer(jsonStr))
+
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Token %s", *apiTOKEN))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := m.HTTPClient.Do(req)
+	if err != nil {
+		fmt.Println("Error POSTing on API server")
+		resp.Body.Close()
+		return err
+	}
+
+	return nil
 }
 
 func handleAlivePost(rw http.ResponseWriter, request *http.Request) {
@@ -93,6 +127,10 @@ func main() {
 	log.Printf(
 		"Starting AliveIM service on %s and port %d ...\n",
 		*serviceHost, *servicePort)
+
+	client = &Client{
+		HTTPClient: &http.Client{},
+	}
 
 	if err := http.ListenAndServe(
 		fmt.Sprintf(
